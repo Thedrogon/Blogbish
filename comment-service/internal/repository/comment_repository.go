@@ -23,8 +23,6 @@ type commentRepository struct {
 	db *sql.DB
 }
 
-
-
 func NewCommentRepository(db *sql.DB) CommentRepository {
 	return &commentRepository{db: db}
 }

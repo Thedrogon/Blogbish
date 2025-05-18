@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -140,8 +141,9 @@ func (s *Server) proxyRequest(target string) http.HandlerFunc {
 		// Copy status code
 		w.WriteHeader(resp.StatusCode)
 
-		// Copy response body
-		if _, err := http.MaxBytesReader(w, resp.Body, 32<<20).WriteTo(w); err != nil {
+		// Copy response body using io.Copy with MaxBytesReader
+		limitedReader := http.MaxBytesReader(w, resp.Body, 32<<20)
+		if _, err := io.Copy(w, limitedReader); err != nil {
 			s.logger.Printf("Error copying response body: %v", err)
 		}
 	}
