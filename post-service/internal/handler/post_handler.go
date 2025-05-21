@@ -17,6 +17,8 @@ type PostHandler struct {
 func NewPostHandler(postService service.PostService) *PostHandler {
 	return &PostHandler{
 		postService: postService,
+
+		
 	}
 }
 

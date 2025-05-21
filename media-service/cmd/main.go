@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,29 +11,15 @@ import (
 	"github.com/Thedrogon/blogbish/media-service/internal/handler"
 	"github.com/Thedrogon/blogbish/media-service/internal/service"
 	"github.com/Thedrogon/blogbish/media-service/internal/storage"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Load AWS configuration
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(os.Getenv("AWS_REGION")),
-	)
+	// Initialize MinIO storage
+	storageProvider, err := storage.NewMinIOStorage()
 	if err != nil {
-		log.Fatalf("unable to load SDK config: %v", err)
+		log.Fatalf("Failed to initialize MinIO storage: %v", err)
 	}
-
-	// Create S3 client
-	s3Client := s3.NewFromConfig(cfg)
-
-	// Initialize storage
-	storageProvider := storage.NewS3Storage(
-		s3Client,
-		os.Getenv("AWS_BUCKET_NAME"),
-		os.Getenv("AWS_REGION"),
-	)
 
 	// Initialize Redis cache
 	redisCache, err := cache.NewRedisCache(

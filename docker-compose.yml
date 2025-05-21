@@ -29,11 +29,15 @@ services:
       - PORT=8082
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - STORAGE_PROVIDER=s3
-      - AWS_REGION=us-east-1
-      - AWS_BUCKET_NAME=blogbish-media
+      - STORAGE_PROVIDER=minio
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_NAME=blogbish-media
+      - MINIO_USE_SSL=false
     depends_on:
       - redis
+      - minio
 
   comment-service:
     build:
@@ -95,7 +99,25 @@ services:
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
 volumes:
   postgres_data:
   redis_data:
   elasticsearch_data:
+  minio_data:
