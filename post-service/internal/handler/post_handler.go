@@ -11,14 +11,12 @@ import (
 )
 
 type PostHandler struct {
-	postService service.PostService
+	postService *service.PostService
 }
 
-func NewPostHandler(postService service.PostService) *PostHandler {
+func NewPostHandler(postService *service.PostService) *PostHandler {
 	return &PostHandler{
 		postService: postService,
-
-		
 	}
 }
 
@@ -30,7 +28,7 @@ func (h *PostHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := h.postService.CreatePost(r.Context(), &input , authorID)
+	post, err := h.postService.CreatePost(r.Context(), &input, authorID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +73,8 @@ func (h *PostHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := h.postService.UpdatePost(r.Context(), id, &input)
+	var authorID int64
+	post, err := h.postService.UpdatePost(r.Context(), id, &input, authorID)
 	if err != nil {
 		if err == service.ErrNotFound {
 			http.Error(w, "Post not found", http.StatusNotFound)
@@ -96,7 +95,8 @@ func (h *PostHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.postService.DeletePost(r.Context(), id); err != nil {
+	var authorID int64
+	if err := h.postService.DeletePost(r.Context(), id, authorID); err != nil {
 		if err == service.ErrNotFound {
 			http.Error(w, "Post not found", http.StatusNotFound)
 			return
@@ -111,7 +111,7 @@ func (h *PostHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *PostHandler) List(w http.ResponseWriter, r *http.Request) {
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	pageSize, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
-	categorySlug := r.URL.Query().Get("category")
+	_ = r.URL.Query().Get("category")
 	status := r.URL.Query().Get("status")
 	tag := r.URL.Query().Get("tag")
 
@@ -123,11 +123,12 @@ func (h *PostHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filter := &models.PostFilter{
-		Page:         page,
-		PageSize:     pageSize,
-		CategorySlug: categorySlug,
-		Status:       status,
-		Tag:         tag,
+		Page:     page,
+		PageSize: pageSize,
+		Status:   status,
+	}
+	if tag != "" {
+		filter.Tags = []string{tag}
 	}
 
 	posts, err := h.postService.ListPosts(r.Context(), filter)
@@ -138,4 +139,4 @@ func (h *PostHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
-} 
+}

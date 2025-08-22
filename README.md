@@ -7,20 +7,20 @@ A modern, cloud-native blogging platform built with Go microservices architectur
 ```
 blogbish/
 ├── auth-service/           # Authentication and user management
-├── post-service/          # Blog post and category management
-├── comment-service/       # Comment management (coming soon)
-├── media-service/        # Media handling (coming soon)
-├── analytics-service/    # Analytics and metrics (coming soon)
-├── docker-compose.yml    # Docker composition for all services
-├── prometheus.yml        # Prometheus monitoring configuration
-├── Makefile             # Build and management commands
-├── go.work              # Go workspace configuration
+├── post-service/           # Blog post and category management
+├── comment-service/        # Comment management
+├── media-service/          # Media handling
+├── search-service/         # Full-text search and suggestions
+├── docker-compose.yml      # Docker composition for all services
+├── prometheus.yml          # Prometheus monitoring configuration
+├── Makefile                # Build and management commands
+├── go.work                 # Go workspace configuration
 └── README.md
 ```
 
 ## Services
 
-### Currently Implemented:
+### Currently Implemented
 
 1. **Auth Service** (Port: 8080)
 
@@ -31,14 +31,23 @@ blogbish/
 2. **Post Service** (Port: 8081)
    - Blog post CRUD operations
    - Category management
-   - Tag management
-   - Post search and filtering
+   - Filtering & pagination
 
-### Coming Soon:
+3. **Media Service** (Port: 8082)
+   - Upload/download files to MinIO (S3-compatible)
+   - Metadata management, Redis caching
 
-3. **Comment Service** (Port: 8082)
-4. **Media Service** (Port: 8083)
-5. **Analytics Service** (Port: 8084)
+4. **Comment Service** (Port: 8083)
+   - Comment CRUD, like, report, moderate
+   - WebSocket hub for live comments
+
+5. **Search Service** (Port: 8084)
+   - Full-text search and suggestions (Elasticsearch)
+   - Index posts and comments
+
+### Planned
+
+- Analytics Service
 
 ## Tech Stack
 
@@ -84,8 +93,9 @@ blogbish/
 4. Access the services:
    - Auth Service: http://localhost:8080
    - Post Service: http://localhost:8081
-   - Prometheus: http://localhost:9090
-   - Grafana: http://localhost:3000
+   - Media Service: http://localhost:8082
+   - Comment Service: http://localhost:8083
+   - Search Service: http://localhost:8084
 
 ## Development
 
@@ -113,21 +123,51 @@ blogbish/
 
 ## API Documentation
 
-### Auth Service Endpoints
+### Auth Service Endpoints (Port 8080)
 
 - `POST /auth/register` - Register a new user
 - `POST /auth/login` - Login user
 - `GET /auth/me` - Get current user info (Protected)
 
-### Post Service Endpoints
+### Post Service Endpoints (Port 8081)
 
 - `POST /posts` - Create a new post (Protected)
-- `GET /posts` - List posts with filtering
-- `GET /posts/{slug}` - Get post by slug
-- `PUT /posts/{slug}` - Update post (Protected)
-- `DELETE /posts/{slug}` - Delete post (Protected)
+- `GET /posts` - List posts with filtering and pagination
+- `GET /posts/{id}` - Get post by ID
+- `PUT /posts/{id}` - Update post by ID (Protected)
+- `DELETE /posts/{id}` - Delete post by ID (Protected)
 - `GET /categories` - List categories
 - `POST /categories` - Create category (Protected)
+- `GET /categories/{slug}` - Get category by slug
+- `PUT /categories/{slug}` - Update category by slug (Protected)
+- `DELETE /categories/{slug}` - Delete category by slug (Protected)
+
+### Media Service Endpoints (Port 8082)
+
+- `POST /api/v1/media/upload` - Upload a file (Protected)
+- `GET /api/v1/media/{id}` - Get media metadata
+- `GET /api/v1/media/{id}/download` - Download file
+- `PUT /api/v1/media/{id}/metadata` - Update metadata (Protected)
+- `DELETE /api/v1/media/{id}` - Delete file (Protected)
+
+### Comment Service Endpoints (Port 8083)
+
+- `POST /comments` - Create a comment (Protected)
+- `GET /comments` - List comments (query: `post_id`, `user_id`, `status`, `parent_id`, `page`, `page_size`)
+- `GET /comments/{id}` - Get comment by ID
+- `PUT /comments/{id}` - Update comment (Protected, author only)
+- `DELETE /comments/{id}` - Delete comment (Protected, author only)
+- `POST /comments/{id}/like` - Like a comment
+- `POST /comments/{id}/report` - Report a comment
+- `PUT /comments/{id}/moderate?status={approved|rejected|pending}` - Moderate comment
+- `GET /ws?post_id={postId}` - WebSocket for live comments (Protected)
+
+### Search Service Endpoints (Port 8084)
+
+- `POST /search` - Search posts/comments
+- `POST /suggest` - Get search suggestions
+- `POST /index/post` - Index a post
+- `POST /index/comment` - Index a comment
 
 ## Contributing
 
