@@ -1,6 +1,7 @@
 go 1.23.0
 
 use (
-    ./auth-service
-    ./post-service
+	.
+	./auth-service
+	./post-service
 )
