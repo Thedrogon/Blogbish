@@ -42,9 +42,10 @@ func (s *Application) SetupRoutes() {
 	// Health check
 	s.router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			s.logger.Printf("Error writing response: %v", err)
+		}
 	})
-
 	// Auth Service Routes
 	s.router.Route("/auth", func(r chi.Router) {
 		r.Post("/register", s.proxyRequest("http://auth-service:8080/auth/register"))
